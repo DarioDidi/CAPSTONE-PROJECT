@@ -1,4 +1,5 @@
 from django.core.paginator import EmptyPage, PageNotAnInteger
+from django.http import request
 from django.views.generic.list import Paginator
 from .forms import CommentForm, DateForm
 from http.client import HTTPResponse
@@ -24,7 +25,7 @@ from accounts.models import CustomUser
 
 from .forms import PostForm
 from .serializers import PostSerializer, CommentSerializer
-from .models import Post, Comment, Like
+from .models import Post, Comment, Like, Repost
 
 '''show all posts by all users in chronological order with latest first'''
 
@@ -89,9 +90,13 @@ class PostDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["post"] = PostSerializer(self.get_object()).data
+        current_post = self.get_object()
+        context["post"] = PostSerializer(current_post).data
         context["comments"] = Comment.objects.filter(
-            post=self.get_object())[:10]
+            post=current_post)[:10]
+        if self.request.user.is_authenticated:
+            if Repost.objects.filter(original_post=current_post, user=self.request.user).exists():
+                context["already_reposted"] = True
         return context
 
 
@@ -169,6 +174,7 @@ def unlike_post(request, pk):
     if request.method == "POST":
         post = get_object_or_404(Post, pk=pk)
         like = Like.objects.filter(user=request.user, post=post).first()
+    # if already liked remove like'''
         if like:
             post.likes.remove(request.user)
             like.delete()
@@ -186,11 +192,42 @@ class TaggedPostListView(ListView):
         return Post.objects.filter(tags__name=tag_name)
 
 
+'''get all the posts that are tagged by "tag"'''
+
+
 def posts_tagged_by(request, tag):
     if request.method == "GET":
         posts = Post.objects.filter(tags__name=tag)
         return render(request, 'posts/tagged_posts.html', {'posts': posts, 'tag': tag})
 
+
+'''share a post to a user's followers'''
+
+
+@login_required
+def repost_view(request, pk):
+    if request.method == "POST":
+        post = get_object_or_404(Post, id=pk)
+        repost, created = Repost.objects.get_or_create(
+            user=request.user, original_post=post)
+        print("\n\nrepost done from page:", request.path, "\n\n")
+        return redirect('post_detail', pk=pk)
+    else:
+        raise PermissionDenied
+
+
+@login_required
+def undo_repost(request, pk):
+    if request.method == "POST":
+        post = get_object_or_404(Post, pk=pk)
+        repost = get_object_or_404(
+            Repost, original_post=post, user=request.user)
+    # if already liked remove like'''
+        if repost:
+            repost.delete()
+        return redirect('post_detail', pk=pk)
+    else:
+        raise PermissionDenied
 
 ##
 # COMMENTS SECTION

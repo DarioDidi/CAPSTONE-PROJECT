@@ -14,6 +14,8 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(CustomUser, related_name='post_likes')
     tags = TaggableManager()
+    reposts = models.ManyToManyField(
+        'self', symmetrical=False, related_name='original_post')
 
     class Meta:
         ordering = ['created_at']  # Order posts by creation date
@@ -50,3 +52,13 @@ class Like(models.Model):
 
     def get_model_type(self):
         return self.__class__.__name__
+
+
+class Repost(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    original_post = models.ForeignKey(
+        Post, on_delete=models.CASCADE, related_name='repost')
+    reposted_at = models.DateTimeField(auto_now=True)
+
+
+#

@@ -12,6 +12,7 @@ class PostSerializer(serializers.ModelSerializer):
     author = BaseUserSmallSerializer(read_only=True)
     likes_count = serializers.SerializerMethodField()
     likes = serializers.SerializerMethodField()
+    reposts = serializers.SerializerMethodField()
     tags = TagListSerializerField()
 
     class Meta:
@@ -28,6 +29,9 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_likes(self, obj):
         return [post.id for post in obj.likes.all()]
+
+    def get_reposts(self, obj):
+        return obj.reposts.count()
 
 
 '''serializer specifically for editing posts'''

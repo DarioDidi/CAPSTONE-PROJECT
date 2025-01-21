@@ -30,6 +30,21 @@
         </form>
     {% endif %}
     <br>
+    {% if request.user.is_authenticated  and not already_reposted %}
+        <form method="post" action="{% url 'repost' post.id %}">
+            {% csrf_token %}
+            <button class="btn btn-outline-success" type=submit>REPOST</button>
+        </form>
+    {% elif request.user.is_authenticated and already_reposted %}
+        <form method="post" action="{% url 'undo_repost' post.id %}">
+            {% csrf_token %}
+            <strong>
+                <p style="color: green;">REPOSTED</p>
+            </strong>
+            <button class="btn btn-outline-success" type=submit>REMOVE REPOST</button>
+        </form>
+    {% endif %}
+    <br>
     {% if request.user.is_authenticated %}
         <p>
             <a href="{% url 'create_comment' post.id %}">ADD COMMENT</a>
@@ -37,7 +52,7 @@
     {% endif %}
     <br>
     <strong>TAGS:</strong>
-    {% for tag in post.tags%}
+    {% for tag in post.tags %}
         <li>
             <a href="{% url 'tag_posts' tag %}">{{ tag }}</a>
         </li>
