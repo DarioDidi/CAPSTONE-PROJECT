@@ -33,6 +33,14 @@ class PostListView(ListView):
     def get_queryset(self):
         posts = Post.objects.all().order_by('-created_at')
         posts = PostSerializer(posts, many=True).data
+        if self.request.user.is_authenticated:
+            reposts = Repost.objects.filter(user=self.request.user)
+            post_ids = [repost.original_post.id for repost in reposts]
+            for post in posts:
+                post['reposted'] = False
+                if post['id'] in post_ids:
+                    post['reposted'] = True
+            return posts
         return posts
 
 

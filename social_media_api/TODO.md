@@ -40,7 +40,7 @@ Technical Requirements:
 
     Authentication:
         (DONE)Implement user authentication using Django’s built-in authentication system.
-        Users must be logged in to create, update, or delete posts, follow other users, or view their feed.
+        (DONE)Users must be logged in to create, update, or delete posts, follow other users, or view their feed.
         Optionally, implement token-based authentication (JWT) to provide secure access to the API.
 
     API Design:
@@ -49,7 +49,7 @@ Technical Requirements:
         Ensure proper error handling, with relevant HTTP status codes (e.g., 404 for not found, 400 for bad request).
 
     Deployment:
-        Deploy the API on Heroku or PythonAnywhere.
+        (DONE)Deploy the API on Heroku or PythonAnywhere. [https://ddinho.pythonanywhere.com/]
         Ensure that the API is accessible, secure, and performs well in the deployed environment.
 
     Pagination and Sorting:
@@ -66,7 +66,8 @@ Stretch Goals (Optional):
     (DONE)Likes and Comments: Implement the ability for users to like and comment on posts, with endpoints to manage likes and comments.
     (DONE)Notifications: Add a notification system where users are notified when someone follows them, likes their post, or comments on it.
     Direct Messaging: Implement a direct messaging feature allowing users to send private messages to each other.
-    Post Sharing and Reposts: Add functionality for users to share or “repost” content from other users in their feed.
+    (DONE)Post Sharing and Reposts: Add functionality for users to share or “repost” content from other users in their feed.
+    (DONE)add repost capability to home list page
     Hashtags and Tagging: Allow users to tag other users in posts or use hashtags, with endpoints to view posts tagged with specific hashtags or mentions.
     Trending Posts: Implement a feature to display trending posts based on the number of likes or reposts in a given period.
     Profile Customization: Allow users to customize their profile with additional fields such as Location, Website, and Cover Photo.
@@ -74,6 +75,6 @@ Stretch Goals (Optional):
     Comment likes
 
 extras:
-- Delete deleted profile pics from medial library
+- (DONE)Delete deleted profile pics from medial library
 - comment threads
-- move create post to header
+- (DONE)move create post to header
