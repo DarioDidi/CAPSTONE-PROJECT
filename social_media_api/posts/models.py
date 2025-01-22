@@ -58,7 +58,7 @@ class Repost(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     original_post = models.ForeignKey(
         Post, on_delete=models.CASCADE, related_name='repost')
-    reposted_at = models.DateTimeField(auto_now=True)
+    reposted_at = models.DateTimeField(auto_now_add=True)
 
 
 #

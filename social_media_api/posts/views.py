@@ -1,22 +1,16 @@
-from django.core.paginator import EmptyPage, PageNotAnInteger
-from django.http import request
-from django.views.generic.list import Paginator
+import itertools
 from .forms import CommentForm, DateForm
 from http.client import HTTPResponse
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
-from django.dispatch import receiver
 from django.db.models import Q
-from django.db.models.signals import post_save
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView, ListView, CreateView, UpdateView, DetailView
 
 
 from rest_framework import filters
-from rest_framework import generics
-from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
@@ -50,6 +44,7 @@ class PostFeedView(ListView, LoginRequiredMixin):
     paginate_by = 10  # Set the number of items per page
     template_name = 'posts/post_feed.html'
     # context_object_name = 'posts'
+    context_object_name = 'user_activity'
 
     def get_queryset(self):
         request = self.request
@@ -58,15 +53,27 @@ class PostFeedView(ListView, LoginRequiredMixin):
         posts = Post.objects.filter(
             author__in=following_users).order_by('-created_at')
         posts = PostSerializer(posts, many=True).data
-        return posts
+        for post in posts:
+            post['post'] = True
+            post['repost'] = False
+        reposts = Repost.objects.filter(
+            user__in=following_users).order_by('-reposted_at')
+        reposts = RepostSerializer(reposts, many=True).data
+        for repost in reposts:
+            repost['post'] = False
+            repost['repost'] = True
+        combined_queryset = list(itertools.chain(posts, reposts))
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['posts'] = self.get_queryset()
-        following_users = self.request.user.following.all()
-        reposts = Repost.objects.filter(user__in=following_users)
-        context['reposts'] = RepostSerializer(reposts, many=True).data
-        return context
+        def sort_by_field(instance):
+            if 'created_at' in instance:
+                return instance['created_at']
+            elif 'reposted_at' in instance:
+                return instance['reposted_at']
+
+        sorted_list = sorted(
+            combined_queryset, key=sort_by_field, reverse=True)
+
+        return sorted_list
 
 
 class PostCreateView(CreateView, LoginRequiredMixin):
