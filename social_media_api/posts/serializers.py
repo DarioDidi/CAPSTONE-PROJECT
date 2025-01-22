@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Post, Comment, Like
+from .models import Post, Comment, Like, Repost
 from accounts.serializers import CustomUserSerializer, BaseUserSmallSerializer  # type: ignore
 from taggit.serializers import (TagListSerializerField,
                                 TaggitSerializer)
@@ -47,6 +47,15 @@ class PostUpdateSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'id': {'read_only': True},
         }
+
+
+class RepostSerializer(serializers.ModelSerializer):
+    user = BaseUserSmallSerializer(read_only=True)
+    original_post = PostSerializer()
+
+    class Meta:
+        model = Repost
+        fields = '__all__'
 
 
 class CommentSerializer(serializers.ModelSerializer):

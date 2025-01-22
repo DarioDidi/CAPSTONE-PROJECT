@@ -24,7 +24,7 @@ from accounts.models import CustomUser
 
 
 from .forms import PostForm
-from .serializers import PostSerializer, CommentSerializer
+from .serializers import PostSerializer, CommentSerializer, RepostSerializer
 from .models import Post, Comment, Like, Repost
 
 '''show all posts by all users in chronological order with latest first'''
@@ -45,11 +45,11 @@ class PostListView(ListView):
 '''show the recent posts by all users the current user follows'''
 
 
-class PostFeedView(ListView):
+class PostFeedView(ListView, LoginRequiredMixin):
     model = Post
     paginate_by = 10  # Set the number of items per page
     template_name = 'posts/post_feed.html'
-    context_object_name = 'posts'
+    # context_object_name = 'posts'
 
     def get_queryset(self):
         request = self.request
@@ -59,6 +59,14 @@ class PostFeedView(ListView):
             author__in=following_users).order_by('-created_at')
         posts = PostSerializer(posts, many=True).data
         return posts
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['posts'] = self.get_queryset()
+        following_users = self.request.user.following.all()
+        reposts = Repost.objects.filter(user__in=following_users)
+        context['reposts'] = RepostSerializer(reposts, many=True).data
+        return context
 
 
 class PostCreateView(CreateView, LoginRequiredMixin):
