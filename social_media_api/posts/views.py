@@ -1,5 +1,4 @@
 import itertools
-from .forms import CommentForm, DateForm
 from http.client import HTTPResponse
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -14,12 +13,45 @@ from rest_framework import filters
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
+from bs4 import BeautifulSoup
+from martor.utils import markdownify
 from accounts.models import CustomUser
 
 
-from .forms import PostForm
+from .forms import CommentForm, DateForm, PostForm
 from .serializers import PostSerializer, CommentSerializer, RepostSerializer
 from .models import Post, Comment, Like, Repost
+
+
+def markdown_find_mentions(markdown_text):
+    """
+    To find the users that mentioned
+    on markdown content using `BeautifulShoup`.
+
+    input  : `markdown_text` or markdown content.
+    return : `list` of usernames.
+    """
+    mark = markdownify(markdown_text)
+    soup = BeautifulSoup(mark, 'html.parser')
+    return list(set(
+        username.text[1::] for username in
+        soup.findAll('a', {'class': 'direct-mention-link'})
+    ))
+
+
+class PostCreateView(CreateView, LoginRequiredMixin):
+    model = Post
+    form_class = PostForm
+    template_name = 'posts/post_create.html'
+
+    def form_valid(self, form):
+        author = CustomUser.objects.get(id=self.request.user.pk)
+        form.instance.author = author
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={"pk": self.object.id})
+
 
 '''show all posts by all users in chronological order with latest first'''
 
@@ -36,6 +68,7 @@ class PostListView(ListView):
         if self.request.user.is_authenticated:
             reposts = Repost.objects.filter(user=self.request.user)
             post_ids = [repost.original_post.id for repost in reposts]
+            ''' check if post has already been shared using the id'''
             for post in posts:
                 post['reposted'] = False
                 if post['id'] in post_ids:
@@ -82,20 +115,6 @@ class PostFeedView(ListView, LoginRequiredMixin):
             combined_queryset, key=sort_by_field, reverse=True)
 
         return sorted_list
-
-
-class PostCreateView(CreateView, LoginRequiredMixin):
-    model = Post
-    form_class = PostForm
-    template_name = 'posts/post_create.html'
-
-    def form_valid(self, form):
-        author = CustomUser.objects.get(id=self.request.user.pk)
-        form.instance.author = author
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse_lazy('post_detail', kwargs={"pk": self.object.id})
 
 
 class PostUpdateView(UpdateView, LoginRequiredMixin, UserPassesTestMixin):
@@ -233,10 +252,12 @@ def repost_view(request, pk):
         post = get_object_or_404(Post, id=pk)
         repost, created = Repost.objects.get_or_create(
             user=request.user, original_post=post)
-        print("\n\nrepost done from page:", request.path, "\n\n")
         return redirect('post_detail', pk=pk)
     else:
         raise PermissionDenied
+
+
+'''remove a share'''
 
 
 @login_required

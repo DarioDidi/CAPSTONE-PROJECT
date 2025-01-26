@@ -1,9 +1,15 @@
+
 from django.dispatch import receiver
 from django.db import models
 from django.db.models.signals import post_save
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+
+
+# markdown processing for @  user tags
+from martor.utils import markdownify
+from bs4 import BeautifulSoup
 
 from posts.models import Post, Like, Comment, Repost
 User = settings.AUTH_USER_MODEL
@@ -69,6 +75,38 @@ def repost_notification(sender, instance, created, **kwargs):
         Notification.objects.create(
             recipient=recipient, actor=actor,  target=post, verb="reposted your post")
 
+
+def markdown_find_mentions(markdown_text):
+    """
+    To find the users that mentioned
+    on markdown content using `BeautifulShoup`.
+
+    input  : `markdown_text` or markdown content.
+    return : `list` of usernames.
+    """
+    mark = markdownify(markdown_text)
+    soup = BeautifulSoup(mark, 'html.parser')
+    return list(set(
+        username.text[1::] for username in
+        soup.findAll('a', {'class': 'direct-mention-link'})
+    ))
+
+
+'''notify users tagged with @ in  post'''
+
+
+@receiver(post_save, sender=Post)
+def user_mention_notification(sender, instance, created, **kwargs):
+    # if created:
+    users = markdown_find_mentions(instance.content)
+    print(f"\n\ncontent:{instance.content}")
+    print("\n\nfound users:", users, "\n\n")
+    for user in users:
+        post = instance
+        actor = instance.author
+        recipient = user
+        Notification.objects.create(
+            recipient=recipient, actor=actor,  target=post, verb="tagged you in their post")
 #
 #
 #

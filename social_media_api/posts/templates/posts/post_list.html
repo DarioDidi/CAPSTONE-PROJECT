@@ -46,7 +46,6 @@
                 {% endif %}
                 <br>
                 {% if request.user.is_authenticated %}
-                    reposted? {{ post.reposted }}
                     {% if request.user.is_authenticated  and not post.reposted %}
                         <form method="post" action="{% url 'repost' post.id %}">
                             {% csrf_token %}

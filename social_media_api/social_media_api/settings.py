@@ -50,11 +50,12 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework.authtoken',
-    'djoser',
     'crispy_forms',
     'crispy_bootstrap4',
     'taggit',
     'django_filters',
+    # markdown
+    'martor',
 
     # owned apps
     'accounts',
