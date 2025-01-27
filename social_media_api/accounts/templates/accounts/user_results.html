@@ -1,0 +1,14 @@
+{# user_results.html #}
+{% extends 'base.html' %}
+{% block content %}
+    <h2>Search results for: {{ search_prompt }}</h2>
+    <ul>
+        {% for user in results %}
+            <li>
+                found user: <a href="{% url 'profile' user.id %}">{{ user.username }}</a>
+            </li>
+        {% empty %}
+            <li>No users found.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

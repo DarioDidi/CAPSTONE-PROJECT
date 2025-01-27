@@ -14,7 +14,7 @@ from rest_framework.response import Response
 
 # Create your views here.
 from .forms import RegisterForm, UpdateUserForm, UpdateProfileForm
-from .serializers import LoginSerializer
+from .serializers import BaseUserSmallSerializer, LoginSerializer
 from .models import CustomUser, UserProfile
 from posts.models import Post
 from notifications.models import Notification
@@ -84,6 +84,17 @@ def profile_update_view(request, user_id):
         profile_form = UpdateProfileForm(instance=profile_instance)
 
     return render(request, 'accounts/profile_update.html', {'user_form': user_form, 'profile_form': profile_form})
+
+
+def user_search(request):
+    prompt = request.GET.get('search_name')
+    results = []
+    if prompt:
+        results = CustomUser.objects.filter(username__icontains=prompt)
+        results = BaseUserSmallSerializer(results, many=True).data
+    else:
+        results = None
+    return render(request, 'accounts/user_results.html', {'results': results, 'search_prompt': prompt})
 
 
 @login_required

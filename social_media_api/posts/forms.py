@@ -7,7 +7,7 @@ from martor.fields import MartorFormField
 
 
 class PostForm(forms.ModelForm):
-    content = MartorFormField()
+    # content = MartorFormField()
 
     class Meta:
         model = Post
