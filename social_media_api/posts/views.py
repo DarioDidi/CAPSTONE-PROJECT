@@ -13,30 +13,12 @@ from rest_framework import filters
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
-from bs4 import BeautifulSoup
-from martor.utils import markdownify
 from accounts.models import CustomUser
 
 
 from .forms import CommentForm, DateForm, PostForm
 from .serializers import PostSerializer, CommentSerializer, RepostSerializer
 from .models import Post, Comment, Like, Repost
-
-
-def markdown_find_mentions(markdown_text):
-    """
-    To find the users that mentioned
-    on markdown content using `BeautifulShoup`.
-
-    input  : `markdown_text` or markdown content.
-    return : `list` of usernames.
-    """
-    mark = markdownify(markdown_text)
-    soup = BeautifulSoup(mark, 'html.parser')
-    return list(set(
-        username.text[1::] for username in
-        soup.findAll('a', {'class': 'direct-mention-link'})
-    ))
 
 
 class PostCreateView(CreateView, LoginRequiredMixin):
@@ -113,6 +95,21 @@ class PostFeedView(ListView, LoginRequiredMixin):
 
         sorted_list = sorted(
             combined_queryset, key=sort_by_field, reverse=True)
+
+        ''' check if post has already been shared using the id'''
+        reposts = Repost.objects.filter(user=self.request.user)
+        post_ids = [repost.original_post.id for repost in reposts]
+
+        for item in sorted_list:
+            if item['repost']:
+                print(item)
+                item['original_post']['reposted'] = False
+                if item['original_post']['id'] in post_ids:
+                    item['original_post']['reposted'] = True
+            elif item['post']:
+                item['reposted'] = False
+                if item['id'] in post_ids:
+                    item['reposted'] = True
 
         return sorted_list
 

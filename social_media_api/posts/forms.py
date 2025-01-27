@@ -2,12 +2,17 @@ from django import forms
 from .models import Post, Comment
 
 from django.forms.widgets import SelectDateWidget
+# markdown form fields
+from martor.fields import MartorFormField
 
 
 class PostForm(forms.ModelForm):
+    content = MartorFormField()
+
     class Meta:
         model = Post
         fields = ['title', 'content', 'tags']
+
 
 '''enable date selection widgets fora more user friendly date range selection'''
 
