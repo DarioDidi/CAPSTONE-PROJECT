@@ -1,12 +1,10 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
 
-from django.views.generic import View
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -18,6 +16,12 @@ from .serializers import BaseUserSmallSerializer, LoginSerializer
 from .models import CustomUser, UserProfile
 from posts.models import Post
 from notifications.models import Notification
+
+from django.shortcuts import render
+
+
+def handler404(request, exception):
+    return HttpResponseNotFound('<h1>Page not found</h1>')
 
 
 def register(request):
