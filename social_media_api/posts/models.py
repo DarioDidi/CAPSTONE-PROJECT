@@ -13,6 +13,7 @@ class Post(models.Model):
     author = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     title = models.CharField(max_length=30)
     content = models.TextField(max_length=1000)
+    old_content = models.TextField(max_length=1000, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(CustomUser, related_name='post_likes')

@@ -16,10 +16,12 @@ class Notification(models.Model):
     actor = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='actions')
     verb = models.CharField(max_length=255)
-    target_content_type = models.ForeignKey(
+    # target_content_type = models.ForeignKey(
+    #    ContentType, on_delete=models.CASCADE, null=True, blank=True)
+    content_type = models.ForeignKey(
         ContentType, on_delete=models.CASCADE, null=True, blank=True)
-    target_object_id = models.PositiveIntegerField(null=True, blank=True)
-    target = GenericForeignKey('target_content_type', 'target_object_id')
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    target = GenericForeignKey('content_type', 'object_id')
 
     timestamp = models.DateTimeField(auto_now_add=True)
 

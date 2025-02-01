@@ -1,14 +1,18 @@
 
+from django.db.models.base import pre_save
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 
 from accounts.models import CustomUser
 from posts.models import Post, Like, Comment, Repost
+from .models import Notification
+
 '''signal on creation of a like creates a notification'''
 
 
 @receiver(post_save, sender=Like)
 def like_notification(sender, instance, created, **kwargs):
+    print("\n\n created a like!\n\n")
     if created:
         # Assuming the post model has a user field for the author
         post = instance.post
@@ -46,35 +50,49 @@ def repost_notification(sender, instance, created, **kwargs):
             recipient=recipient, actor=actor,  target=post, verb="reposted your post")
 
 
-# def markdown_find_mentions(markdown_text):
-#    """
-#    To find the users that mentioned
-#    on markdown content using `BeautifulShoup`.
-#
-#    input  : `markdown_text` or markdown content.
-#    return : `list` of usernames.
-#    """
-#    mark = markdownify(markdown_text)
-#    soup = BeautifulSoup(mark, 'html.parser')
-#    return list(set(
-#        username.text[1::] for username in
-#        soup.findAll('a', {'class': 'direct-mention-link'})
-#    ))
-#
-
 def find_mentions(text):
     print("\n in find mentions \n")
     # TODO:check for @mentions not separated by spaces
-    return [word[1:] for word in text.split() if word[0] == '@']
+    return [word for word in text.split() if word[0] == '@']
 
 
 '''notify users tagged with @ in  post'''
 
 
+# @receiver(post_save, sender=Post)
+# def user_mention_notification2(sender, instance, created, **kwargs):
+#    # if created:
+#    users = find_mentions(instance.content)
+#    for user in users:
+#        user_instance = CustomUser.objects.filter(username=user)
+#        if not user_instance.exists():
+#            continue
+#        post = instance
+#        actor = instance.author
+#        recipient = user_instance[0]
+#        print("recipient:", recipient)
+#        if Notification.objects.filter():
+#            Notification.objects.get_or_create(
+#                recipient=recipient, actor=actor,  target=post, verb="tagged you in their post")
+#
+@receiver(pre_save, sender=Post)
+def save_old_content(sender, instance, **kwargs):
+    if instance.pk:
+        instance.old_content = instance.__class__.objects.get(
+            pk=instance.pk).content
+
+
 @receiver(post_save, sender=Post)
 def user_mention_notification(sender, instance, created, **kwargs):
-    # if created:
     users = find_mentions(instance.content)
+    found = [user for user in users]
+    if instance.old_content:
+        for user in users:
+            if user in instance.old_content:
+                found.remove(user)
+
+    print("\n\n found after filter:", found, "\n\n")
+    users = [user[1:] for user in found]
     for user in users:
         user_instance = CustomUser.objects.filter(username=user)
         if not user_instance.exists():
@@ -82,6 +100,5 @@ def user_mention_notification(sender, instance, created, **kwargs):
         post = instance
         actor = instance.author
         recipient = user_instance[0]
-        print("recipient:", recipient)
-        Notification.objects.get_or_create(
+        Notification.objects.create(
             recipient=recipient, actor=actor,  target=post, verb="tagged you in their post")
