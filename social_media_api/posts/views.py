@@ -164,11 +164,16 @@ class PostDeleteView(DeleteView, LoginRequiredMixin, UserPassesTestMixin):
 def post_search(request):
     if request.method == "GET":
         search_term = request.GET.get('search_term')
-        title_q = Q(title__icontains=search_term) if search_term else Q()
-        content_q = Q(content__icontains=search_term) if search_term else Q()
-        # combined_q = title_q & content_q
-        results = Post.objects.filter(content_q | title_q)
-        prompt = f"Post with the term:'{search_term}'"
+        words = search_term.split()
+
+        # find if all words are present in either content of title
+        condition = Q()
+        for word in words:
+            condition = condition & (Q(title__icontains=word) |
+                                     Q(content__icontains=word))
+
+        results = Post.objects.filter(condition)
+        prompt = f"Post with the term(s):'{search_term}'"
         return render(request, 'posts/search_results.html', {'results': results, 'search_prompt': prompt})
     else:
         raise PermissionDenied()

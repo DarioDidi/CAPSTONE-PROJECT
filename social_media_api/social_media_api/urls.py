@@ -10,7 +10,6 @@ urlpatterns = [
     path('', include('posts.urls')),
     path('', include('notifications.urls')),
     path('api-auth/', include('rest_framework.urls')),
-    path('martor/', include('martor.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
