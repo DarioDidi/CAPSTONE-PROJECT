@@ -60,8 +60,7 @@ Technical Requirements:
 Stretch Goals (Optional):
     
     ####notifs
-    Notifications for posts by people you follow
-    Delete notifications
+    (DONE)Delete notifications
 
     (DONE)Likes and Comments: Implement the ability for users to like and comment on posts, with endpoints to manage likes and comments.
     (DONE)Notifications: Add a notification system where users are notified when someone follows them, likes their post, or comments on it.
@@ -77,4 +76,7 @@ Stretch Goals (Optional):
 extras:
 - (DONE)Delete deleted profile pics from medial library
 - comment threads
+- comment likes
+- quote responses
 - (DONE)move create post to header
+- paginate comments under a post

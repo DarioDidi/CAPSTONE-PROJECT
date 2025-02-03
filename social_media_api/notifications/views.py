@@ -20,7 +20,7 @@ def notification_view(request):
 
 @login_required
 def mark_as_read(request, notification_id):
-    notification = Notification.objects.get(id=notification_id)
+    notification = get_object_or_404(Notification, id=notification_id)
     notification.read = True
     notification.save()
     return redirect('notification_view')
@@ -37,7 +37,7 @@ class NotificationDeleteView(DeleteView, LoginRequiredMixin, UserPassesTestMixin
     def dispatch(self, request, pk):
         if request.method == 'POST':
             # Delete the object if confirmed
-            noti = Notification.objects.get(id=pk)
+            noti = get_object_or_404(Notification, id=pk)
             if noti.recipient == request.user:
                 noti.delete()
                 return redirect(self.success_url)

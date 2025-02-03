@@ -62,10 +62,19 @@ class CommentSerializer(serializers.ModelSerializer):
     # nested serializer for the related Post
     post = PostSerializer(read_only=True)
     author = CustomUserSerializer(read_only=True)
+    likes = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
         fields = '__all__'
+        extra_fields = "like_count"
+
+    def get_likes(self, obj):
+        return [comment.id for comment in obj.likes.all()]
+
+    def get_like_count(self, obj):
+        return obj.likes.count()
 
 
 class LikeSerializer(serializers.ModelSerializer):

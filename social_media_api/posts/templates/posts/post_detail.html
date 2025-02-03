@@ -7,14 +7,17 @@
     </p>
     <p class="date">Lates version {{ post.updated_at }}</p>
     <strong>CONTENT:</strong>{{ post.content|linebreaks }}
+    {#authenticated edit or delete#}
     {% if user.is_authenticated and user.id == post.author.id %}
         <p>
             <a style="color: red;" href="{% url 'delete_post' post.id %}">Delete post</a>
         </p>
+        <br>
         <p>
             <a href="{% url 'update_post' post.id %}">Edit post</a>
         </p>
     {% endif %}
+    {# like post #}
     {% if request.user.is_authenticated and user.id in post.likes %}
         <form method="post" action="{% url 'unlike_post' post.id %}">
             {% csrf_token %}
@@ -64,22 +67,9 @@
     </p>
     <ul>
         {% for comment in comments %}
-            <li>
-                <strong>by:<a href="{% url 'profile' comment.author.id %}">{{ comment.author.username }}</strong></a>
-            <p>
-                <i>comment:</i> {{ comment.content }}
-            </p>
-            {% if comment.author == user %}
-                <p>
-                    <a href="{% url 'comment_update' comment.id %}">Edit comment</a>
-                </p>
-                <p>
-                    <a style="color: red;"href="{% url 'comment_delete' comment.id %}">Delete comment</a>
-                </p>
-            {% endif %}
-        </li>
-    {% empty %}
-        NO COMMENTS
-    {% endfor %}
-</ul>
+            <li>{% include 'posts/comment_include.html' %}</li>
+        {% empty %}
+            NO COMMENTS
+        {% endfor %}
+    </ul>
 {% endblock %}

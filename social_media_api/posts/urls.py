@@ -23,12 +23,14 @@ urlpatterns = [
          CommentCreateView.as_view(), name='create_comment'),
     path('posts/<int:pk>/comments/',
          CommentListView.as_view(), name='comment_list'),
-    path('comment/<int:pk>/update/',
+    path('comments/<int:pk>/update/',
          CommentUpdateView.as_view(), name='comment_update'),
-    path('comment/<int:pk>/delete/',
+    path('comments/<int:pk>/delete/',
          CommentDeleteView.as_view(), name='comment_delete'),
-    path('comment/<int:pk>/',
+    path('comments/<int:pk>/',
          CommentDetailView.as_view(), name='comment_detail'),
+    path('comments/<int:pk>/like/', like_comment, name='like_comment'),
+    path('comments/<int:pk>/unlike/', unlike_comment, name='unlike_comment'),
 
     # api endpoints
     path('api/posts/', api_views.PostListView.as_view(), name='api_posts'),

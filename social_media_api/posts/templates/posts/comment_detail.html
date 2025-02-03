@@ -1,26 +1,19 @@
 {% extends 'base.html' %}
 {% block content %}
-    <!-- Blog post content -->
-    <h2>Comments</h2>
-    {% if user.is_authenticated %}
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Add comment</button>
-        </form>
-    {% else %}
-        <p>Log in to add a comment!</p>
+    comment by: {{ comment.author.username }}
+    <p>created at:({{ comment.created_at }})</p>
+    <br>
+    <p>content:{{ comment.content|safe }}</p>
+    <br>
+    <p>likes: {{ comment.like_count }}</p>
+    {% include 'posts/comment_like.html' %}
+    {% if comment.author.id == user.id %}
+        <p>
+            <a href="{% url 'comment_update' comment.id %}">Edit comment</a>
+        </p>
+        <p>
+            <a style="color: red;" href="{% url 'comment_delete' comment.id %}">Delete comment</a>
+        </p>
     {% endif %}
-    {% if comments %}
-        <ul>
-            {% for comment in comments %}
-                <li>
-                    {{ comment.author }} ({{ comment.created_at }})
-                    {{ comment.content|safe }}
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No comments yet...</p>
-    {% endif %}
+</ul>
 {% endblock %}

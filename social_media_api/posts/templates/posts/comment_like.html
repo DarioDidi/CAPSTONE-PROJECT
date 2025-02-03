@@ -1,0 +1,14 @@
+{% if user.is_authenticated and user.id in comment.likes %}
+    <form method="post" action="{% url 'unlike_comment' comment.id %}">
+        {% csrf_token %}
+        <strong>
+            <p style="color: green;">LIKED</p>
+        </strong>
+        <button class="btn btn-outline-success" type=submit>UNLIKE</button>
+    </form>
+{% elif request.user.is_authenticated %}
+    <form method="post" action="{% url 'like_comment' comment.id %}">
+        {% csrf_token %}
+        <button class="btn btn-outline-success" type=submit>LIKE</button>
+    </form>
+{% endif %}

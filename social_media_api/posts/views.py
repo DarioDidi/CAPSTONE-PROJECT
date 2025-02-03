@@ -27,7 +27,7 @@ class PostCreateView(CreateView, LoginRequiredMixin):
     template_name = 'posts/post_create.html'
 
     def form_valid(self, form):
-        author = CustomUser.objects.get(id=self.request.user.pk)
+        author = get_object_or_404(CustomUser, id=self.request.user.pk)
         form.instance.author = author
         return super().form_valid(form)
 
@@ -131,8 +131,9 @@ class PostDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         current_post = self.get_object()
         context["post"] = PostSerializer(current_post).data
-        context["comments"] = Comment.objects.filter(
+        comments = Comment.objects.filter(
             post=current_post)[:10]
+        context["comments"] = CommentSerializer(comments, many=True).data
         if self.request.user.is_authenticated:
             if Repost.objects.filter(original_post=current_post, user=self.request.user).exists():
                 context["already_reposted"] = True
@@ -147,7 +148,7 @@ class PostDeleteView(DeleteView, LoginRequiredMixin, UserPassesTestMixin):
     def dispatch(self, request, pk):
         if request.method == 'POST':
             # Delete the object if confirmed
-            post = Post.objects.get(id=pk)
+            post = get_object_or_404(Post, id=pk)
             # make sure requester is the author of the post
             if post.author == request.user:
                 post.delete()
@@ -202,12 +203,16 @@ def range_search_view(request):
 
 @login_required
 def like_post(request, pk):
+    print("\n\nin like post")
     if request.method == "POST":
         post = get_object_or_404(Post, pk=pk)
         like, created = Like.objects.get_or_create(
             user=request.user, post=post)
         if created:
+            print("post like created")
             post.likes.add(request.user)
+        print("post likes:", post.likes.all)
+        print("\n\n")
         return redirect('post_detail', pk=pk)
     else:
         raise PermissionDenied
@@ -252,7 +257,7 @@ def posts_tagged_by(request, tag):
 def repost_view(request, pk):
     if request.method == "POST":
         post = get_object_or_404(Post, id=pk)
-        repost, created = Repost.objects.get_or_create(
+        Repost.objects.get_or_create(
             user=request.user, original_post=post)
         return redirect('post_detail', pk=pk)
     else:
@@ -293,7 +298,7 @@ class CommentListView(ListView):
 
     def get(self, request):
         pk = self.kwargs['pk']
-        post = Post.objects.get(id=pk)
+        post = get_object_or_404(Post, id=pk)
         comments = Comment.objects.filter(post=post)
         paginated_comments = CommentPagination().paginate_queryset(
             queryset=comments, request=request)
@@ -329,10 +334,20 @@ class CommentUpdateView(UpdateView, LoginRequiredMixin, UserPassesTestMixin):
 
 
 class CommentDetailView(DetailView):
-    def get(self, request):
-        comment = Comment.objects.get(id=request.data['id'])
+    # def get(self, request, pk):
+    #    comment = get_object_or_404(Comment, id=pk)
+    #    serializer = CommentSerializer(comment)
+    #    return Response(serializer.data)
+
+    model = Comment
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        comment = self.get_object()
         serializer = CommentSerializer(comment)
-        return Response(serializer.data)
+        context["comment"] = serializer.data
+        print(context["comment"])
+        return context
 
 
 class CommentDeleteView(DeleteView, LoginRequiredMixin, UserPassesTestMixin):
@@ -357,3 +372,36 @@ class CommentDeleteView(DeleteView, LoginRequiredMixin, UserPassesTestMixin):
 
     def get_success_url(self):
         return reverse_lazy('post_detail', kwargs={"pk": self.get_object().post.id})
+
+
+@login_required
+def like_comment(request, pk):
+    print("\n\n in like _comment", "\n\n")
+    if request.method == "POST":
+        comment = get_object_or_404(Comment, pk=pk)
+        like, created = Like.objects.get_or_create(
+            user=request.user, comment=comment)
+        if created:
+            print("comment like created")
+            comment.likes.add(request.user)
+
+        print("comment likes", comment.likes.all())
+        print("comment Like instance:", like, "created?:", created)
+        print("\n\n")
+        return redirect('comment_detail', pk=pk)
+    else:
+        raise PermissionDenied
+
+
+@login_required
+def unlike_comment(request, pk):
+    if request.method == "POST":
+        comment = get_object_or_404(Comment, pk=pk)
+        like = Like.objects.filter(user=request.user, comment=comment).first()
+    # if already liked remove like'''
+        if like:
+            comment.likes.remove(request.user)
+            like.delete()
+        return redirect('comment_detail', pk=pk)
+    else:
+        raise PermissionDenied

@@ -52,8 +52,8 @@ def user_login(request):
 
 
 def profile_view(request, user_id):
-    profile_instance = UserProfile.objects.get(id=user_id)
-    user = CustomUser.objects.get(id=user_id)
+    profile_instance = get_object_or_404(UserProfile, id=user_id)
+    user = get_object_or_404(CustomUser, id=user_id)
     context = {}
     context['already_followed'] = user.followers.filter(
         id=request.user.id).count() > 0
@@ -71,8 +71,8 @@ def profile_update_view(request, user_id):
     if request.user.id != user_id:
         return HttpResponse(status=403, content='Forbidden')
 
-    user_instance = CustomUser.objects.get(id=user_id)
-    profile_instance = UserProfile.objects.get(id=user_id)
+    user_instance = get_object_or_404(CustomUser, id=user_id)
+    profile_instance = get_object_or_404(UserProfile, id=user_id)
 
     if request.method == 'POST':
         user_form = UpdateUserForm(request.POST, instance=user_instance)
